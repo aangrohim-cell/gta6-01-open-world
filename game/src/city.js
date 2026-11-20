@@ -15,6 +15,12 @@ const BEACH_PASTELS = ['#e8917f', '#e8dcc0', '#a8d5c1', '#c9b6dd', '#a9cfe0', '#
 const MIDTOWN_WARM = ['#d8b38a', '#c98f6b', '#e3c9a3', '#b98f7a', '#d9a17c', '#cdb08b'];
 const DOWNTOWN_GLASS = ['#7d8fa8', '#94a6b8', '#6d7f96', '#b0bfc8', '#8aa0ad', '#6f8497'];
 const LOWRISE = ['#c7b299', '#d6c3aa', '#bfa78f', '#e0cdb2', '#b9a893'];
+const DISTRICT_NAMES = {
+  beach: 'Vice Beach',
+  downtown: 'Downtown',
+  lowrise: 'Little Haiti',
+  midtown: 'Midtown',
+};
 
 function lotOf(i, j) {
   return {
@@ -337,6 +343,10 @@ export function createCity(seed) {
   }
   props.push({ type: 'lifeguard', x: 1120, y: sandStart + 168, angle: 0, size: 1 });
   props.push({ type: 'lifeguard', x: 4860, y: sandStart + 150, angle: 0, size: 1 });
+  // A regular line of boardwalk lamps makes the boulevard read as a street at night.
+  for (let x = 260; x < CITY.width - 220; x += 210) {
+    props.push({ type: 'lamp', x, y: sandStart - 20, angle: 0, size: 0.9 });
+  }
   // The pier: planks from the sand out over the water, with lamps.
   const pier = { x: 5760, y: 6420, w: 118, h: 780 };
   for (let index = 0; index < 11; index += 1) {
@@ -485,6 +495,25 @@ export function createCity(seed) {
     return { x: 2000, y: 2000 };
   }
 
+  // A single lookup table keeps blockAt/locationAt cheap enough to call from the HUD every frame.
+  const blockMap = new Map(blocks.map((block) => [`${block.i},${block.j}`, block]));
+
+  function findBlock(x, y) {
+    return blockMap.get(`${Math.floor(x / P)},${Math.floor(y / P)}`) ?? null;
+  }
+
+  /** A short, human-readable address for the HUD (landmark > district > waterfront). */
+  function locationAt(x, y) {
+    if (y > waterY - 6) return 'Offshore';
+    const block = findBlock(x, y);
+    if (!block) return 'Vice City';
+    if (block.service) return block.service.name;
+    if (block.landmark === 'mansion') return 'Vesper Mansion';
+    if (block.landmark === 'marina') return 'Bayside Marina';
+    if (block.type === 'pierlot') return 'Pier Approach';
+    return DISTRICT_NAMES[block.district] ?? 'Vice City';
+  }
+
   return {
     seed,
     width: CITY.width,
@@ -505,10 +534,7 @@ export function createCity(seed) {
     raycast,
     nearby,
     randomRoadPoint,
-    blockAt(x, y) {
-      const i = Math.floor(x / P);
-      const j = Math.floor(y / P);
-      return blocks.find((b) => b.i === i && b.j === j) ?? null;
-    },
+    locationAt,
+    blockAt: findBlock,
   };
 }

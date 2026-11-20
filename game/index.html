@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Vice Harbor — an open-world crime game set in a sunset city. Steal cars, run jobs for Dex, outrun the police and finish the story.">
 <meta name="theme-color" content="#0b0912">
+<meta name="color-scheme" content="dark">
 <title>Vice Harbor — an open-world crime game</title>
+<!-- A data URI keeps the browser from asking the server for a favicon outside game/. -->
+<link rel="icon" href="data:,">
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #07060c; }
   body {
@@ -21,6 +24,7 @@
     box-shadow: 0 30px 90px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 207, 92, 0.14);
     touch-action: none;
     cursor: default;
+    user-select: none;
   }
   /* Read aloud, never shown: the line screen readers announce as the game changes screens. */
   #status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -28,9 +32,9 @@
 </style>
 </head>
 <body>
-<canvas id="game" width="1280" height="720" aria-label="Vice Harbor: an open-world crime game. Walk with WASD, aim with the mouse, click to shoot, press E to steal a car, and P to pause."></canvas>
+<canvas id="game" width="1280" height="720" aria-label="Vice Harbor: an open-world crime game. Walk with WASD, aim with the mouse, click to shoot, press E to steal a car, F5 to save, and P to pause."></canvas>
 <p id="status" role="status" aria-live="polite">Vice Harbor. Press Enter or click to start.</p>
-<noscript>Vice Harbor needs JavaScript enabled.</noscript>
+<noscript>Vice Harbor needs JavaScript enabled in a desktop browser.</noscript>
 <script type="module" src="./src/main.js"></script>
 </body>
 </html>

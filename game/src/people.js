@@ -3,8 +3,8 @@
 // are small state machines with a look, a health value and a panic reaction; combat.js does the
 // shooting and asks this module who was hit.
 
-import { CITY, GANG, POLICE, TRAFFIC } from './config.js';
-import { angleDelta, clamp, distance, intRange, lerp, pick, range } from './random.js';
+import { CITY, GANG, LOOT, POLICE, TRAFFIC } from './config.js';
+import { angleDelta, chance, clamp, distance, intRange, lerp, pick, range } from './random.js';
 
 const SHIRTS = ['#e8dfc6', '#d76a5b', '#5c8fa8', '#e8b84a', '#7d6a9a', '#6f9c6f', '#c7779b', '#e0e4e8', '#3f4a5c', '#b5794e'];
 const PANTS = ['#3a4254', '#5a4a3a', '#2c3038', '#6b6357', '#46505f', '#7a5d46'];
@@ -180,6 +180,7 @@ export function createPeople(world) {
       world.addPickup('cash', ped.x + range(random, -10, 10), ped.y + range(random, -10, 10), intRange(random, 8, 55));
     }
     if (random() < 0.12) world.addPickup('ammo', ped.x, ped.y, 12);
+    if (chance(random, LOOT.pedArmor)) world.addPickup('armor', ped.x, ped.y, 25);
     if (cause === 'shot') world.addWanted(0.85, null);
     world.audio.hit();
     world.emit('pedKilled', { ped, cause });
@@ -376,10 +377,15 @@ export function createPeople(world) {
       state.copKills += 1;
       world.addWanted(1.3, 'Officer down');
       if (random() < 0.8) world.addPickup('ammo', man.x, man.y, 20);
+      // Armour pickups were renderable but never dropped; fallen officers are the natural source.
+      if (chance(random, LOOT.copArmor)) world.addPickup('armor', man.x + random() * 12 - 6, man.y + random() * 12 - 6, 35);
     } else {
       world.addWanted(0.35, null);
       if (random() < 0.85) world.addPickup('cash', man.x + random() * 14 - 7, man.y + random() * 14 - 7, intRange(random, 40, 120));
-      if (random() < 0.35) world.addPickup('health', man.x, man.y, 25);
+      if (chance(random, LOOT.gangHealth)) world.addPickup('health', man.x, man.y, 25);
+      if (man.boss || chance(random, LOOT.gangArmor)) {
+        world.addPickup('armor', man.x + random() * 12 - 6, man.y + random() * 12 - 6, man.boss ? 60 : 30);
+      }
     }
     world.audio.hit();
     world.emit('manKilled', { man, source });

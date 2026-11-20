@@ -64,6 +64,10 @@ function ped(world, x, y, angle, kind = 'ped') {
   return person;
 }
 
+function pickup(world, type, x, y, value) {
+  world.addPickup(type, x, y, value, { bob: 1.4 });
+}
+
 /* ------------------------------------------------------------------ title */
 
 function titleShot() {
@@ -122,6 +126,8 @@ function streetShot(seed) {
   ped(world, 5976, 6614, 2.6, 'beach');
   ped(world, 5080, 6608, -1.1, 'beach');
   ped(world, 5712, 6856, 0.9, 'beach');
+  pickup(world, 'cash', 5468, 6488, 120);
+  pickup(world, 'armor', 5628, 6404, 35);
 
   world.setObjective({
     title: 'SUNSET SCORE',
@@ -188,6 +194,15 @@ function coverShot(seed) {
   traffic(world, 3480, 3972, Math.PI, 'van');
   traffic(world, 2900, 3972, Math.PI, 'sports');
   traffic(world, 3120, 4104, 0, 'pickup');
+  traffic(world, 2760, 4104, Math.PI, 'sedan');
+  traffic(world, 3620, 4028, 0, 'van');
+  policeCar(world, 2690, 4104, 0.5);
+
+  // Dropped loot from the pursuit, close enough to read but out of the collector's reach.
+  pickup(world, 'armor', 3112, 4082, 40);
+  pickup(world, 'health', 2952, 4082, 35);
+  pickup(world, 'ammo', 3268, 4082, 30);
+  pickup(world, 'cash', 3416, 4082, 180);
 
   // Skid marks from the chase so far, plus a little tyre smoke.
   for (let index = 0; index < 15; index += 1) {
@@ -202,11 +217,19 @@ function coverShot(seed) {
   world.combat.flash(torero.x - 26, torero.y - 10, Math.PI + 0.3, 16);
   world.combat.tracer(torero.x - 22, torero.y - 10, copA.x + 30, copA.y, '#ffd27a');
   world.combat.impact(copA.x + 24, copA.y + 2, 0, '#ffcf8a');
+  world.combat.tracer(copB.x + 26, copB.y - 8, torero.x - 32, torero.y - 12, '#a8c8ff');
+  world.combat.flash(copB.x + 24, copB.y - 8, 0, 12);
+  world.combat.flash(2630, 3970, 0.4, 22);
+  world.combat.impact(copA.x + 30, copA.y - 6, 0.2, '#ffd27a');
 
   // People on the pavement, watching it go by.
   ped(world, 2870, 4094, 0.2);
   ped(world, 3210, 4090, 3.0);
   ped(world, 3322, 4096, -0.4);
+  ped(world, 2680, 4108, 2.2);
+  ped(world, 3062, 4106, -1.4, 'beach');
+  ped(world, 3528, 4102, 0.8);
+  ped(world, 3660, 3900, -2.4);
 
   world.setObjective({
     title: 'SUNSET SCORE',
@@ -313,6 +336,9 @@ function missionShot(seed) {
   ped(world, 6088, 6604, 2.8, 'beach');
   ped(world, 5992, 6766, 2.2, 'beach');
   ped(world, 5688, 6802, -1.1, 'beach');
+  pickup(world, 'armor', 5612, 6698, 30);
+  pickup(world, 'health', 5928, 6694, 40);
+  pickup(world, 'ammo', 5536, 6602, 36);
 
   return {
     world,

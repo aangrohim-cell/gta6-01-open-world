@@ -5,8 +5,8 @@
 // ?seed=N fixes the city. ?shot=title|street|cover|mission stages a screenshot scene and paints
 // it without running, then sets window.__shotReady for the browser tool.
 
-import { CITY, SAVE_KEY, STEP, VIEW } from './config.js';
-import { createRandom, clamp } from './random.js';
+import { CAMERA, CITY, STEP, VIEW } from './config.js';
+import { clamp } from './random.js';
 import { createCity } from './city.js';
 import { createWorld } from './world.js';
 import { createMissions } from './missions.js';
@@ -57,6 +57,14 @@ function fitCanvas() {
 }
 window.addEventListener('resize', fitCanvas);
 fitCanvas();
+
+// Browsers can suspend a tab without warning; bank progress before that happens.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && screen === 'playing') saveNow(true);
+});
+window.addEventListener('pagehide', () => {
+  if (screen === 'playing') saveNow(true);
+});
 
 /* ---------------------------------------------------------------- save slot */
 
@@ -195,13 +203,15 @@ function updateCamera(dt) {
   if (!world) return;
   const player = world.player;
   const car = player.inCar;
-  const targetX = car ? car.x + car.vx * 0.3 : player.x;
-  const targetY = car ? car.y + car.vy * 0.3 : player.y;
-  const follow = 1 - Math.exp(-dt * (car ? 5.2 : 7.4));
+  // The minimap arrow should point where the car is heading, not where the player last walked.
+  if (car) player.angle = car.angle;
+  const targetX = car ? car.x + car.vx * CAMERA.lookAhead : player.x;
+  const targetY = car ? car.y + car.vy * CAMERA.lookAhead : player.y;
+  const follow = 1 - Math.exp(-dt * CAMERA.follow * (car ? 0.85 : 1.25));
   camera.x += (targetX - camera.x) * follow;
   camera.y += (targetY - camera.y) * follow;
-  const zoomTarget = car ? 0.93 : 1;
-  camera.zoom += (zoomTarget - camera.zoom) * (1 - Math.exp(-dt * 3.5));
+  const zoomTarget = car ? CAMERA.zoomCar : CAMERA.zoomFoot;
+  camera.zoom += (zoomTarget - camera.zoom) * (1 - Math.exp(-dt * CAMERA.shakeDecay * 0.6));
   const halfW = VIEW.width / (2 * camera.zoom);
   const halfH = VIEW.height / (2 * camera.zoom);
   camera.x = clamp(camera.x, halfW, CITY.width - halfW);
@@ -424,6 +434,7 @@ function startShot(name) {
   const shot = buildShot(name, SEED);
   canvas.style.cursor = 'none';
   fitCanvas();
+  window.__game = shot;
   if (shot.screen === 'title') {
     let frames = 0;
     const paint = () => {

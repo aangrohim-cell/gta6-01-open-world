@@ -99,6 +99,14 @@ export const TRAFFIC = {
   pedSpeed: 34,
 };
 
+/** Loot tables. Kept here so balancing a drop never means hunting through people.js. */
+export const LOOT = {
+  copArmor: 0.34,
+  gangArmor: 0.16,
+  gangHealth: 0.35,
+  pedArmor: 0.02,
+};
+
 export const PALETTE = {
   sea: '#2a6b86',
   seaDeep: '#1d4e69',

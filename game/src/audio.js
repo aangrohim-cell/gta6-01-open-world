@@ -162,6 +162,11 @@ export function createAudio() {
       resume();
       noise(0.06, 0.14, 1400, 500);
     },
+    /** Tyre scrub on a hard handbrake turn. Short and filtered so it never drowns the engine. */
+    skid() {
+      resume();
+      noise(0.13, 0.1, 2200, 900);
+    },
     hit() {
       resume();
       noise(0.09, 0.25, 700, 80);

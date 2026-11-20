@@ -6,6 +6,7 @@
 
 import { CAR_COLORS, CITY, PALETTE, PLAYER_LOOK, VIEW } from './config.js';
 import { clamp, shade, withAlpha } from './random.js';
+import { breathe, pulse } from './vfx.js';
 
 const HALF_W = VIEW.width / 2;
 const HALF_H = VIEW.height / 2;
@@ -771,7 +772,19 @@ export function createWorldRenderer(canvas) {
       ctx.stroke();
     }
     if (car.kind === 'cop' && car.siren) {
-      const phase = Math.sin(time * 11) > 0;
+      const phase = pulse(time, 11) > 0.5;
+      // A soft coloured wash on the asphalt makes a distant siren readable before the light bar is.
+      const washRadius = 92 * breathe(time, 11, 0, 0.16);
+      const wash = ctx.createRadialGradient(0, 0, 4, 0, 0, washRadius);
+      wash.addColorStop(0, phase ? 'rgba(255, 70, 60, 0.18)' : 'rgba(75, 125, 255, 0.18)');
+      wash.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = wash;
+      ctx.beginPath();
+      ctx.arc(0, 0, washRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
       const glow = (color) => {
         const radial = ctx.createRadialGradient(0, 0, 2, 0, 0, 30);
         radial.addColorStop(0, color);
@@ -902,7 +915,7 @@ export function createWorldRenderer(canvas) {
   }
 
   function drawMarker(marker, time) {
-    const pulse = 1 + Math.sin(time * 3.2) * 0.12;
+    const markerScale = breathe(time, 3.2, 0, 0.12);
     const radius = (marker.r ?? 55) * 0.55;
     ctx.save();
     ctx.translate(marker.x, marker.y);
@@ -910,17 +923,17 @@ export function createWorldRenderer(canvas) {
     const color = marker.kind === 'mission' ? '#ffcf5c' : marker.kind === 'kill' ? '#ff6b5a' : marker.kind === 'vehicle' ? '#7fe6c8' : '#ffcf5c';
     ctx.fillStyle = withAlpha(color, 0.13);
     ctx.beginPath();
-    ctx.arc(0, 0, radius * 1.25 * pulse, 0, Math.PI * 2);
+    ctx.arc(0, 0, radius * 1.25 * markerScale, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = withAlpha(color, 0.8);
     ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.arc(0, 0, radius * pulse, 0, Math.PI * 2);
+    ctx.arc(0, 0, radius * markerScale, 0, Math.PI * 2);
     ctx.stroke();
     ctx.strokeStyle = withAlpha(color, 0.4);
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(0, 0, radius * 0.7 * pulse, 0, Math.PI * 2);
+    ctx.arc(0, 0, radius * 0.7 * markerScale, 0, Math.PI * 2);
     ctx.stroke();
     ctx.fillStyle = color;
     const size = 13;
@@ -1118,8 +1131,7 @@ export function createWorldRenderer(canvas) {
 
   /* ---------------------------------------------------------------- water front pier */
 
-  function drawPier(view) {
-    const pier = CITY._pierData;
+  function drawPier(view, pier) {
     if (!pier) return;
     if (pier.x > view.x1 || pier.x + pier.w < view.x0 || pier.y > view.y1) return;
     ctx.fillStyle = 'rgba(30, 40, 46, 0.35)';
@@ -1141,7 +1153,6 @@ export function createWorldRenderer(canvas) {
     const view = visible(cam);
     effects = world.effects;
     worldTapes = world.city.tapes;
-    if (!CITY._pierData) CITY._pierData = world.city.pier;
     ctx.fillStyle = '#8d8678';
     ctx.fillRect(0, 0, VIEW.width, VIEW.height);
     ctx.save();
@@ -1158,7 +1169,7 @@ export function createWorldRenderer(canvas) {
       if (block.x > view.x1 || block.x + block.w < view.x0 || block.y > view.y1 || block.y + block.h < view.y0) continue;
       drawBlockGround(block, view);
     }
-    drawPier(view);
+    drawPier(view, world.city.pier);
 
     // Building shadows first, then bodies: a long shadow can cross the next street.
     for (const building of world.city.buildings) drawBuildingShadow(building, view);
@@ -1194,12 +1205,20 @@ export function createWorldRenderer(canvas) {
         armed: world.player.weapon !== 'fists',
         scale: 1.06,
       });
-      // A soft ring under the player's feet.
-      ctx.strokeStyle = 'rgba(255, 244, 210, 0.35)';
-      ctx.lineWidth = 1.2;
+      // A soft ring under the player's feet, tinted blue while armor is active.
+      const armored = world.player.armor > 0;
+      ctx.strokeStyle = armored ? 'rgba(140, 190, 255, 0.55)' : 'rgba(255, 244, 210, 0.35)';
+      ctx.lineWidth = armored ? 2 : 1.2;
       ctx.beginPath();
       ctx.arc(world.player.x, world.player.y, 13, 0, Math.PI * 2);
       ctx.stroke();
+      if (armored) {
+        ctx.strokeStyle = `rgba(120, 175, 255, ${0.16 + pulse(time, 2.4) * 0.2})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(world.player.x, world.player.y, 17 * breathe(time, 2.4, 0, 0.06), 0, Math.PI * 2);
+        ctx.stroke();
+      }
     }
     drawEffects(view, time);
     ctx.restore();

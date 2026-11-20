@@ -28,8 +28,8 @@ export const MISSIONS = [
     steps: [
       {
         text: 'Steal the cherry Torero at the marina',
-        marker: () => {
-          const car = world().missionCar;
+        marker: (ctx) => {
+          const car = ctx.world.missionCar;
           return { x: car.x, y: car.y, r: 46, kind: 'vehicle' };
         },
         update: (ctx) => ctx.world.player.inCar === ctx.world.missionCar,
@@ -201,9 +201,6 @@ export const MISSIONS = [
   },
 ];
 
-let activeWorld = null;
-function world() { return activeWorld; }
-
 /** The Bad Debt steps are three near-identical shakedowns; build them here. */
 function buildDebtSteps(sites) {
   const debtors = [
@@ -228,7 +225,6 @@ function buildDebtSteps(sites) {
 }
 
 export function createMissions(worldRef, startProgress = 0, storyDone = false) {
-  activeWorld = worldRef;
   const sites = {
     ...worldRef.city.storySites,
     pierDrop: { x: 5820, y: 6640 },

@@ -6,7 +6,7 @@
 import { WEAPONS } from './config.js';
 import { clamp, distance } from './random.js';
 
-const DECAL_CAP = 260;
+const DECAL_CAP = 180;
 
 function rayCircle(ox, oy, dx, dy, cx, cy, radius) {
   const px = cx - ox;
@@ -237,7 +237,7 @@ export function createCombat(world) {
 
   function addDecal(decal) {
     decals.push(decal);
-    if (decals.length > DECAL_CAP) decals.shift();
+    while (decals.length > DECAL_CAP) decals.shift();
   }
 
   function skid(x, y, angle) {
@@ -274,7 +274,8 @@ export function createCombat(world) {
       player.inCar = null;
       player.x = car.x + Math.cos(car.angle + Math.PI / 2) * 30;
       player.y = car.y + Math.sin(car.angle + Math.PI / 2) * 30;
-      player.health = Math.max(0, player.health - 70);
+      // Ejected from the blast radius: the radial hit below is the only damage applied.
+      player.invulnerable = 0;
     }
     car.kind = 'wreck';
     car.health = 0;
@@ -307,10 +308,7 @@ export function createCombat(world) {
     }
     if (player.health > 0) {
       const d = distance(player.x, player.y, car.x, car.y);
-      if (d < 170) {
-        world.damagePlayer(70 * (1 - d / 190), 'explosion');
-        player.invulnerable = 0;
-      }
+      if (d < 170) world.damagePlayer(70 * (1 - d / 190), 'explosion');
     }
     for (const other of world.cars.list) {
       if (other === car || other.kind === 'wreck') continue;

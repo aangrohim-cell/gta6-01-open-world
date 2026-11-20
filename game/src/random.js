@@ -46,6 +46,11 @@ export function distance(ax, ay, bx, by) {
   return Math.hypot(ax - bx, ay - by);
 }
 
+/** Readable coin flip for loot tables and ambient events. */
+export function chance(random, probability) {
+  return random() < probability;
+}
+
 /** The smallest signed difference between two angles, in -PI..PI. */
 export function angleDelta(from, to) {
   let delta = (to - from) % (Math.PI * 2);

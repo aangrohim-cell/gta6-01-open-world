@@ -298,6 +298,7 @@ export function drawTitle(ctx, options) {
     ['SHIFT / SPACE', 'sprint / handbrake'],
     ['1 2 3 · R', 'weapons · reload'],
     ['P · M', 'pause · mute'],
+    ['F5', 'save progress instantly'],
   ];
   manual.forEach((row, index) => {
     const y = cardY + 56 + index * 24;
@@ -409,6 +410,7 @@ export function drawPause(ctx, world, missionSystem, saveInfo) {
     ['R', 'reload'],
     ['P / ESC', 'pause'],
     ['M', 'mute sound'],
+    ['F5', 'save progress right now'],
   ];
   rows.forEach((row, index) => {
     const y = boxY + 58 + index * 25;
@@ -421,7 +423,7 @@ export function drawPause(ctx, world, missionSystem, saveInfo) {
   });
   ctx.fillStyle = 'rgba(246, 241, 230, 0.55)';
   ctx.font = `600 12px ${FONT}`;
-  ctx.fillText('ENTER / ESC  resume        Q  quit to title        F5  save now', 80, 596);
+  ctx.fillText('ENTER / ESC  resume        Q  quit to title', 80, 596);
   ctx.fillStyle = 'rgba(159, 232, 112, 0.85)';
   ctx.font = `600 11px ${FONT}`;
   ctx.fillText(saveInfo ?? 'Saved to this browser.', 80, 626);

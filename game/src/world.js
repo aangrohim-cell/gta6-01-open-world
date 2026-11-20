@@ -218,6 +218,7 @@ export function createWorld(city, audio, seed) {
 
   world.addPickup = function addPickup(type, x, y, value, extra = {}) {
     world.pickups.push({ type, x, y, value, life: extra.life ?? 60, bob: random() * 6.28, ...extra });
+    if (world.pickups.length > 120) world.pickups.shift();
   };
 
   function collectPickups(dt) {
@@ -490,6 +491,10 @@ export function createWorld(city, audio, seed) {
     state.serviceCooldown = Math.max(0, state.serviceCooldown - dt);
     player.invulnerable = Math.max(0, player.invulnerable - dt);
     player.fireCooldown = Math.max(0, player.fireCooldown - dt);
+    // A reload that never counted down left the HUD ring stuck and locked the weapon forever.
+    const wasReloading = player.reloadTimer > 0;
+    player.reloadTimer = Math.max(0, player.reloadTimer - dt);
+    if (wasReloading && player.reloadTimer === 0) world.audio.reload();
 
     updateToasts(dt);
     updateDialog(dt);

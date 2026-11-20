@@ -1,6 +1,6 @@
 [
-  { "name": "1-cover.jpg", "query": "?shot=cover&seed=20260417", "note": "Cover: Torero chase through downtown, three stars of heat, police cruisers, traffic and a mission HUD." },
+  { "name": "1-cover.jpg", "query": "?shot=cover&seed=20260417", "note": "Cover: a three-star Torero chase through downtown with cruisers, civilian traffic, armour pickup and a full mission HUD." },
   { "name": "2-marina.jpg", "query": "?shot=street&seed=20260417", "note": "On foot at the marina: the cherry Torero, a patrol cruiser, beach crowd, pier and sea." },
-  { "name": "3-pier.jpg", "query": "?shot=mission&seed=20260417", "note": "Pier firefight: SMG tracer fire, Vic's crew, dialogue, wanted level and minimap." },
-  { "name": "4-title.jpg", "query": "?shot=title&seed=20260417", "note": "Title screen with continue slot and the field manual." }
+  { "name": "3-pier.jpg", "query": "?shot=mission&seed=20260417", "note": "Pier firefight: SMG tracer fire, Vic's crew, dialogue, wanted stars and minimap." },
+  { "name": "4-title.jpg", "query": "?shot=title&seed=20260417", "note": "Title screen with a saved game, field manual and the new quick-save hint." }
 ]

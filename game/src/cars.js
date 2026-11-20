@@ -4,7 +4,7 @@
 // most of the game's noise comes from here.
 
 import { CAR, CAR_COLORS, CITY, POLICE, TRAFFIC } from './config.js';
-import { angleDelta, clamp, distance, intRange, lerp, pick, range } from './random.js';
+import { angleDelta, chance, clamp, distance, intRange, lerp, pick, range } from './random.js';
 
 export const CAR_MODELS = {
   sedan: { w: 42, l: 84 },
@@ -52,6 +52,8 @@ export function createCars(world) {
       deployTimer: 0,
       stuckTimer: 0,
       smokeTimer: 0,
+      hornTimer: 0,
+      skidSoundTimer: 0,
       siren: options.kind === 'cop',
       missionTag: options.missionTag ?? null,
       parked: options.kind === 'parked' || options.kind === 'special',
@@ -160,6 +162,13 @@ export function createCars(world) {
     car.vx = Math.cos(car.angle) * car.speed;
     car.vy = Math.sin(car.angle) * car.speed;
     car.along = car.axis === 'h' ? car.x : car.y;
+    // A driver honks when the player's car crowds its lane, but never more than once a moment.
+    car.hornTimer = Math.max(0, (car.hornTimer ?? 0) - dt);
+    if (car.hornTimer <= 0 && player.inCar && car.speed > 40
+      && distance(car.x, car.y, player.x, player.y) < 115 && chance(random, dt * 0.5)) {
+      car.hornTimer = 2.2 + random() * 2;
+      world.audio.horn();
+    }
     if (distance(car.x, car.y, player.x, player.y) > 1900) recycleTraffic(car);
   }
 
@@ -203,6 +212,8 @@ export function createCars(world) {
   }
 
   function updatePlayerCar(car, dt, controls) {
+    const startX = car.x;
+    const startY = car.y;
     const forwardX = Math.cos(car.angle);
     const forwardY = Math.sin(car.angle);
     const rightX = -forwardY;
@@ -284,7 +295,8 @@ export function createCars(world) {
       }
     }
 
-    state.distanceDriven += Math.hypot(stepX, stepY);
+    // Count the distance actually travelled, not the intended step into a wall.
+    state.distanceDriven += Math.hypot(car.x - startX, car.y - startY);
     player.x = car.x;
     player.y = car.y;
     car.speed = Math.hypot(car.vx, car.vy);
@@ -297,6 +309,11 @@ export function createCars(world) {
         const back = -car.l * 0.3;
         world.combat.skid(car.x + Math.cos(car.angle) * back, car.y + Math.sin(car.angle) * back, car.angle);
         world.combat.skid(car.x + Math.cos(car.angle) * back + Math.cos(car.angle + Math.PI / 2) * 12, car.y + Math.sin(car.angle) * back + Math.sin(car.angle + Math.PI / 2) * 12, car.angle);
+        car.skidSoundTimer = Math.max(0, (car.skidSoundTimer ?? 0) - 0.035);
+        if (car.skidSoundTimer <= 0) {
+          car.skidSoundTimer = 0.16;
+          world.audio.skid();
+        }
       }
     }
 
@@ -501,9 +518,10 @@ export function createCars(world) {
     if (wasOccupied) {
       world.people.spawnFleeingDriver(car);
       world.people.scare(car.x, car.y, 230);
-      if (world.nearestOfficer < 620 || city.blockAt(car.x, car.y)?.type !== 'park') {
-        world.addWanted(0.62, 'Grand theft auto');
-      }
+      // The old check looked for a block type 'park', which this city never produces, so every
+      // carjack was reported at full heat. Base it on who saw it instead.
+      const witnessed = world.nearestOfficer < 620;
+      world.addWanted(witnessed ? 0.62 : 0.42, 'Grand theft auto');
       world.audio.horn();
     }
     state.radio = pick(random, RADIO);

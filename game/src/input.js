@@ -7,7 +7,7 @@ import { VIEW } from './config.js';
 
 const GAME_KEYS = new Set([
   'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyE', 'KeyF', 'KeyM', 'KeyR', 'KeyP', 'KeyQ',
-  'ShiftLeft', 'ShiftRight', 'Space', 'Enter', 'Escape', 'Tab',
+  'ShiftLeft', 'ShiftRight', 'Space', 'Enter', 'Escape', 'Tab', 'F5',
   'Digit1', 'Digit2', 'Digit3', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
 ]);
 
@@ -16,6 +16,7 @@ export function createInput(canvas) {
   const pressed = new Set();
   const mouse = { x: VIEW.width / 2, y: VIEW.height / 2, down: false, pressed: false, wheel: 0 };
   const clicks = [];
+  let lastBlur = 0;
 
   function logical(event) {
     const rect = canvas.getBoundingClientRect();
@@ -23,6 +24,16 @@ export function createInput(canvas) {
       x: ((event.clientX - rect.left) / Math.max(1, rect.width)) * VIEW.width,
       y: ((event.clientY - rect.top) / Math.max(1, rect.height)) * VIEW.height,
     };
+  }
+
+  function forgetEverything() {
+    lastBlur = performance.now();
+    down.clear();
+    pressed.clear();
+    clicks.length = 0;
+    mouse.down = false;
+    mouse.pressed = false;
+    mouse.wheel = 0;
   }
 
   window.addEventListener('keydown', (event) => {
@@ -34,10 +45,8 @@ export function createInput(canvas) {
   window.addEventListener('keyup', (event) => {
     down.delete(event.code);
   });
-  window.addEventListener('blur', () => {
-    down.clear();
-    mouse.down = false;
-  });
+  window.addEventListener('blur', forgetEverything);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) forgetEverything(); });
 
   canvas.addEventListener('pointermove', (event) => {
     const point = logical(event);
@@ -69,6 +78,8 @@ export function createInput(canvas) {
     down(code) { return down.has(code); },
     pressed(code) { return pressed.has(code); },
     anyPressed(codes) { return codes.some((code) => pressed.has(code)); },
+    /** True for a short moment after the window regains focus; used to ignore stale clicks. */
+    recentlyBlurred() { return performance.now() - lastBlur < 160; },
     mouse,
     /** Clicks since the last call, then forgotten. */
     takeClicks() {
@@ -82,10 +93,6 @@ export function createInput(canvas) {
       mouse.pressed = false;
       mouse.wheel = 0;
     },
-    clear() {
-      down.clear();
-      pressed.clear();
-      mouse.down = false;
-    },
+    clear: forgetEverything,
   };
 }

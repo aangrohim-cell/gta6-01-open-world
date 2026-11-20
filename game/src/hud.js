@@ -4,6 +4,7 @@
 
 import { CITY, FONT, FONT_MONO, PALETTE, VIEW, WEAPONS } from './config.js';
 import { clamp } from './random.js';
+import { pulse } from './vfx.js';
 
 const GOLD = '#ffcf5c';
 const CREAM = '#f6f1e6';
@@ -120,7 +121,7 @@ function drawMinimap(ctx, world, x, y, size, time) {
     const sx = mapX(car.x);
     const sy = mapY(car.y);
     if (sx < x || sx > x + size || sy < y || sy > y + size) continue;
-    ctx.fillStyle = Math.sin(time * 10) > 0 ? '#ff5a5a' : '#6f9dff';
+    ctx.fillStyle = pulse(time, 10) > 0.5 ? '#ff5a5a' : '#6f9dff';
     ctx.beginPath();
     ctx.arc(sx, sy, 3.2, 0, Math.PI * 2);
     ctx.fill();
@@ -145,7 +146,7 @@ function drawMinimap(ctx, world, x, y, size, time) {
   const cy = y + size / 2;
   ctx.strokeStyle = 'rgba(255, 244, 220, 0.18)';
   ctx.beginPath();
-  ctx.arc(cx, cy, 12 + Math.sin(time * 2.6) * 2, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 10 + pulse(time, 2.6) * 4, 0, Math.PI * 2);
   ctx.stroke();
   ctx.save();
   ctx.translate(cx, cy);
@@ -282,10 +283,10 @@ export function drawHUD(ctx, world, camera, options = {}) {
 
   // Low-health red bloom.
   if (player.health < 40) {
-    const pulse = 0.12 + 0.06 * Math.sin(time * 5);
+    const bloom = 0.12 + 0.06 * pulse(time, 5);
     const gradient = ctx.createRadialGradient(VIEW.width / 2, VIEW.height / 2, 250, VIEW.width / 2, VIEW.height / 2, 720);
     gradient.addColorStop(0, 'rgba(120, 0, 0, 0)');
-    gradient.addColorStop(1, `rgba(120, 10, 14, ${pulse + (40 - player.health) * 0.002})`);
+    gradient.addColorStop(1, `rgba(120, 10, 14, ${bloom + (40 - player.health) * 0.002})`);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, VIEW.width, VIEW.height);
   }
@@ -394,6 +395,27 @@ export function drawHUD(ctx, world, camera, options = {}) {
   /* minimap */
   drawMinimap(ctx, world, 22, VIEW.height - 238, 216, time);
 
+  // A small address chip turns raw coordinates into a readable neighbourhood name.
+  const location = world.city.locationAt?.(player.x, player.y) ?? 'Vice City';
+  ctx.save();
+  ctx.font = `700 11px ${FONT}`;
+  const locationWidth = Math.min(216, ctx.measureText(location).width + 24);
+  const locationY = VIEW.height - 260;
+  ctx.fillStyle = 'rgba(15, 13, 22, 0.72)';
+  ctx.beginPath();
+  ctx.roundRect(22, locationY, locationWidth, 20, 5);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 236, 205, 0.15)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = GOLD;
+  ctx.fillRect(22, locationY, 3, 20);
+  ctx.fillStyle = CREAM;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(location, 32, locationY + 10);
+  ctx.restore();
+
   /* objective */
   const objective = world.state.objective;
   if (objective) {
@@ -485,6 +507,7 @@ export function drawHUD(ctx, world, camera, options = {}) {
   });
   if (player.inCar) {
     const speed = Math.round(Math.hypot(player.inCar.vx, player.inCar.vy) * 0.18);
+    const speedRatio = clamp(speed / 140, 0, 1);
     ctx.textAlign = 'left';
     ctx.fillStyle = MUTED;
     ctx.font = `700 9px ${FONT}`;
@@ -495,6 +518,12 @@ export function drawHUD(ctx, world, camera, options = {}) {
     ctx.fillStyle = MUTED;
     ctx.font = `700 9px ${FONT}`;
     ctx.fillText('MPH', VIEW.width - 190, VIEW.height - 146);
+    // A segmented speed strip gives a sense of acceleration without cluttering the panel.
+    for (let index = 0; index < 10; index += 1) {
+      const lit = index / 10 < speedRatio;
+      ctx.fillStyle = lit ? (index > 7 ? '#ff6b5a' : GOLD) : 'rgba(255, 255, 255, 0.1)';
+      ctx.fillRect(VIEW.width - 246 + index * 16, VIEW.height - 138, 12, 3);
+    }
   }
 
   /* radio and car name */

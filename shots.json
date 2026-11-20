@@ -1,5 +1,6 @@
 [
-  { "name": "1-start.jpg", "query": "?shot=start&seed=1" },
-  { "name": "2-play.jpg", "query": "?shot=play&seed=1" },
-  { "name": "3-end.jpg", "query": "?shot=end&seed=1" }
+  { "name": "1-cover.jpg", "query": "?shot=cover&seed=20260417", "note": "Cover: Torero chase through downtown, three stars of heat, police cruisers, traffic and a mission HUD." },
+  { "name": "2-marina.jpg", "query": "?shot=street&seed=20260417", "note": "On foot at the marina: the cherry Torero, a patrol cruiser, beach crowd, pier and sea." },
+  { "name": "3-pier.jpg", "query": "?shot=mission&seed=20260417", "note": "Pier firefight: SMG tracer fire, Vic's crew, dialogue, wanted level and minimap." },
+  { "name": "4-title.jpg", "query": "?shot=title&seed=20260417", "note": "Title screen with continue slot and the field manual." }
 ]

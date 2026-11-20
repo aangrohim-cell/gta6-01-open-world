@@ -1,5 +1,9 @@
 # VICE HARBOR
 
+[![make.fun · gta6-01](https://make.fun/badge/gta6-01.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
+[![rank](https://make.fun/badge/gta6-01/aangrohim-cell/gta6-01-open-world/rank.svg)](https://make.fun/bounty/gta6-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
+[![reward](https://make.fun/badge/gta6-01/aangrohim-cell/gta6-01-open-world/reward.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
+
 A complete open-world crime game in the spirit of GTA, built for make.fun's “Make GTA 6” bounty (gta6-01). It runs offline in a desktop browser from plain static files: a top-down sunset city of sixteen blocks, on foot and behind the wheel.
 
 ![VICE HARBOR](screenshots/1-cover.jpg)

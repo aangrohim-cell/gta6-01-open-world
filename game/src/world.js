@@ -63,6 +63,7 @@ export function createWorld(city, audio, seed) {
     lastVitals: 0,
     serviceCooldown: 0,
     sirenPulse: 0,
+    stepTimer: 0,
     hint: '',
     missionPrompt: '',
     banner: null,
@@ -230,7 +231,9 @@ export function createWorld(city, audio, seed) {
       const py = player.inCar ? player.inCar.y : player.y;
       const reach = player.inCar ? 34 : 24;
       const near = distance(px, py, item.x, item.y) < reach;
-      if (near) {
+      const full = (item.type === 'health' && player.health >= PLAYER.maxHealth)
+        || (item.type === 'armor' && player.armor >= PLAYER.maxArmor);
+      if (near && !full) {
         if (item.type === 'cash') {
           player.money += item.value;
           world.audio.cash();
@@ -244,9 +247,10 @@ export function createWorld(city, audio, seed) {
           world.audio.pickup();
           world.notify('ARMOR PICKED UP', '#8fb8ff', 1.8);
         } else if (item.type === 'ammo') {
-          player.reserve.pistol += item.value;
+          const slot = item.weapon === 'smg' ? 'smg' : 'pistol';
+          player.reserve[slot] += item.value;
           world.audio.pickup();
-          world.notify(`+${item.value} PISTOL AMMO`, '#ffcf5c', 1.8);
+          world.notify(`+${item.value} ${slot === 'smg' ? 'SMG' : 'PISTOL'} AMMO`, '#ffcf5c', 1.8);
         }
         world.pickups.splice(index, 1);
         continue;
@@ -261,7 +265,7 @@ export function createWorld(city, audio, seed) {
         state.tapes += 1;
         player.money += 500;
         world.notify(`MIXTAPE ${state.tapes}/8  +$500`, '#ff9de2', 3);
-        world.audio.mission();
+        world.audio.tape();
         world.emit('tape', { index: tape.index, total: state.tapes });
       }
     }
@@ -293,6 +297,16 @@ export function createWorld(city, audio, seed) {
     else player.vy *= -0.1;
     player.run = Math.hypot(player.vx, player.vy);
     player.walkPhase += dt * (4 + player.run * 0.035);
+    // Footfalls are quiet and only while sprinting, so they read as effort, not noise.
+    if (sprint && player.run > 120) {
+      state.stepTimer -= dt;
+      if (state.stepTimer <= 0) {
+        state.stepTimer = 0.31;
+        world.audio.step();
+      }
+    } else {
+      state.stepTimer = 0;
+    }
     player.angle = player.aimAngle;
   }
 
@@ -441,10 +455,10 @@ export function createWorld(city, audio, seed) {
       world.bustTimer = 0;
       return;
     }
-    if (world.nearestOfficer < 62) {
+    if (world.nearestOfficer < WANTED.bustDistance) {
       world.bustTimer = (world.bustTimer ?? 0) + dt;
       state.hint = 'POLICE ARE ON YOU — MOVE!';
-      if (world.bustTimer > 1.7) world.busted();
+      if (world.bustTimer > WANTED.bustDelay) world.busted();
     } else {
       world.bustTimer = 0;
     }
@@ -463,7 +477,6 @@ export function createWorld(city, audio, seed) {
   }
 
   function updatePrompt() {
-    state.hint = '';
     if (state.wasted > 0 || state.busted > 0) {
       state.prompt = '';
       return;
@@ -529,6 +542,10 @@ export function createWorld(city, audio, seed) {
     }
 
     if (controls.enterPressed) interact();
+    if (controls.hornPressed && player.inCar) {
+      world.audio.horn();
+      world.people.scare(player.x, player.y, 130);
+    }
     if (controls.weaponSlot) world.selectWeapon(controls.weaponSlot);
     if (controls.reloadPressed) world.reload();
     if (controls.fire) world.tryFire(controls.aimX, controls.aimY);
@@ -539,6 +556,7 @@ export function createWorld(city, audio, seed) {
     collectPickups(dt);
     updatePolicePresence(dt);
     updateWanted(dt);
+    state.hint = '';
     checkBusted(dt);
     updatePrompt();
 

@@ -10,9 +10,9 @@ A complete open-world crime game in the spirit of GTA, built for make.fun's “M
 
 ## What is in the city
 
-- **A whole city, not a level:** sixteen blocks of downtown, Calle Ocho, motels, bodegas, a marina, a beach and a pier, with traffic, pedestrians, palm trees and a sunset shoreline. The HUD names the neighbourhood you are in.
-- **On foot and by car:** walk, sprint, carjack, drive with a handbrake, and watch the car take damage. A minimap, speedometer strip and radio ride along. Sirens wash the asphalt red and blue before a cruiser reaches you.
-- **A wanted level and police:** crimes raise the heat from one to five stars; cruisers spawn, sirens close in, officers deploy and give chase, and the stars cool off when you disappear. Get caught and you are BUSTED; go down and you wake up at Mercy General.
+- **A whole city, not a level:** sixteen blocks of downtown, Calle Ocho, motels, bodegas, a marina, a beach and a pier, with traffic, pedestrians, palms, rooftop billboards and a sunset shoreline. The HUD names the neighbourhood you are in.
+- **On foot and by car:** walk, sprint, carjack, drive with a handbrake, watch the car take damage and sound the horn. A minimap, speedometer strip, car-name chip and radio ride along. Sirens wash the asphalt red and blue before a cruiser reaches you.
+- **A wanted level and police:** crimes raise the heat from one to five stars; cruisers spawn, sirens close in, officers deploy and give chase, and the stars cool off when you disappear. An officer who stays too close on foot BUSTS you; going down wakes you at Mercy General.
 - **Combat and loot:** fists, a pistol and an SMG, with muzzle flashes, tracers, impacts, blood, explosions, smoke and bodies that stay down. Cash, ammo, health and armor drop around the city; armor soaks most of the next hit and draws a blue ring under your feet.
 - **A six-job story from Dex:** steal the cherry Torero, shake down three debtors, lose a two-star tail, survive a double-cross at the pier, wipe out a cartel crew, and finish it at the Mendez mansion.
 - **A start screen and a save:** continue from `localStorage`, autosave every 20 seconds, quick-save with `F5`, pause screen with stats, eight mixtapes to find, and service markers for the garage, hospital, gun shop and spray shop.
@@ -28,12 +28,13 @@ A complete open-world crime game in the spirit of GTA, built for make.fun's “M
 | `Space` | handbrake in a car; advance dialogue |
 | `1` `2` `3` | fists / pistol / SMG |
 | `R` | reload |
+| `H` | sound the horn while driving |
 | `F5` | save progress instantly (outside a job) |
 | `P` / `Esc` | pause |
 | `M` | mute sound |
 | `Enter` / `Space` | start, continue, get up from WASTED/BUSTED |
 
-Progress is also saved when a job finishes, a purchase is made, a mixtape is found, the tab is hidden, or the game is paused. A save is validated when written and when read, so a truncated or hand-edited slot will not crash the title screen.
+Progress is saved when a job finishes, a purchase is made, a mixtape is found, the tab is hidden, the game is paused or `F5` is pressed. The slot records the city seed, so CONTINUE rebuilds the same streets you left. Every field is validated when written and when read, so a truncated or hand-edited slot will not crash the title screen.
 
 ## Run it
 
@@ -54,7 +55,7 @@ Hand in the entry (the same program the grader runs):
 mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 ```
 
-`main.ts` checks the file count, path lengths, screenshot count and sizes first, then copies `game/` and `screenshots/` to the output directory and writes `dossier.json`. It prints a short summary and exits non-zero if the entry would be refused. The game itself loads nothing from the network: no libraries, fonts, images or data leave the folder.
+`main.ts` checks the file count, path lengths, screenshot names, dimensions and sizes, rejects any network reference inside `game/`, copies `game/` and `screenshots/` to the output directory, then writes `dossier.json`. It prints a short summary and exits non-zero if the entry would be refused. The game itself loads nothing from the network: no libraries, fonts, images or data leave the folder.
 
 ## Screenshots
 
@@ -80,7 +81,7 @@ The first image by name is the cover. Each shot uses the same renderer, city gen
 | `combat.js` | hit-scan weapons, explosions and pooled effects |
 | `missions.js` | the six-job story and its markers |
 | `render.js` / `hud.js` / `screens.js` | canvas world, interface, and title/pause/end cards |
-| `audio.js` | synthetic Web Audio soundtrack, sirens and impacts |
+| `audio.js` | synthetic Web Audio soundtrack, sirens, horns and impacts |
 | `input.js` / `save.js` / `vfx.js` | keyboard and mouse, validated save slot, shared timing helpers |
 | `main.js` / `shots.js` | boot loop, camera, and the staged screenshot scenes |
 

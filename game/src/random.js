@@ -23,10 +23,19 @@ export function intRange(random, min, max) {
   return min + Math.floor(random() * (max - min + 1));
 }
 
-/** A cheap 2D value noise for district shapes, in 0..1. */
+/** A cheap, continuous 2D value noise in 0..1: four hashed corners, bilinearly blended. */
 export function valueNoise(x, y) {
-  const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
-  return s - Math.floor(s);
+  const cellX = Math.floor(x);
+  const cellY = Math.floor(y);
+  const corner = (ix, iy) => {
+    const s = Math.sin(ix * 127.1 + iy * 311.7) * 43758.5453;
+    return s - Math.floor(s);
+  };
+  const u = smoothstep(0, 1, x - cellX);
+  const v = smoothstep(0, 1, y - cellY);
+  const top = lerp(corner(cellX, cellY), corner(cellX + 1, cellY), u);
+  const bottom = lerp(corner(cellX, cellY + 1), corner(cellX + 1, cellY + 1), u);
+  return lerp(top, bottom, v);
 }
 
 export function smoothstep(edge0, edge1, value) {
@@ -51,6 +60,24 @@ export function chance(random, probability) {
   return random() < probability;
 }
 
+/** Pick from weighted entries: [[value, weight], ...]. */
+export function weightedPick(random, entries) {
+  let total = 0;
+  for (const entry of entries) total += Math.max(0, entry[1]);
+  let roll = random() * total;
+  for (const entry of entries) {
+    roll -= Math.max(0, entry[1]);
+    if (roll <= 0) return entry[0];
+  }
+  return entries[entries.length - 1][0];
+}
+
+/** Move `current` toward `target` by at most `delta`, without overshooting. */
+export function approach(current, target, delta) {
+  if (current < target) return Math.min(target, current + delta);
+  return Math.max(target, current - delta);
+}
+
 /** The smallest signed difference between two angles, in -PI..PI. */
 export function angleDelta(from, to) {
   let delta = (to - from) % (Math.PI * 2);
@@ -71,5 +98,5 @@ export function shade(hex, amount) {
 export function withAlpha(hex, alpha) {
   const value = hex.replace('#', '');
   const num = Number.parseInt(value.length === 3 ? value.split('').map((c) => c + c).join('') : value, 16);
-  return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
+  return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${clamp(alpha, 0, 1)})`;
 }

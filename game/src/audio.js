@@ -186,6 +186,16 @@ export function createAudio() {
       tone(520, 0.07, 'square', 0.07);
       tone(780, 0.1, 'square', 0.06, 0, 0.06);
     },
+    /** A bright four-note flourish when a hidden mixtape is found. */
+    tape() {
+      resume();
+      [659, 880, 1175, 1568].forEach((freq, index) => tone(freq, 0.13, 'triangle', 0.09, 0, index * 0.06));
+    },
+    /** A very short, quiet footfall; the world only calls it while sprinting. */
+    step() {
+      resume();
+      noise(0.045, 0.045, 780, 180);
+    },
     horn() {
       resume();
       tone(300, 0.24, 'square', 0.08);

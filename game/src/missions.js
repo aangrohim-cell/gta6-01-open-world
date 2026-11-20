@@ -23,7 +23,7 @@ export const MISSIONS = [
     intro: [
       { who: DEX, text: 'That cherry Torero down at the marina? Belongs to a bookie who forgot what he owes me.' },
       { who: DEX, text: 'Bring it to my garage in one piece. The second you touch it, every cop in Vice Harbor will know.' },
-      { who: DEX, text: 'Lose them before you get here. I don\'t do traffic stops.' },
+      { who: DEX, text: 'Lose them before you get here. I don\'t do traffic stops, and I don\'t do scratches.' },
     ],
     steps: [
       {
@@ -204,12 +204,12 @@ export const MISSIONS = [
 /** The Bad Debt steps are three near-identical shakedowns; build them here. */
 function buildDebtSteps(sites) {
   const debtors = [
-    { name: 'Manny', pos: sites.debtors[0] },
-    { name: 'Carla', pos: sites.debtors[1] },
-    { name: 'Tito', pos: sites.debtors[2] },
+    { name: 'Manny', place: 'bodega', pos: sites.debtors[0] },
+    { name: 'Carla', place: 'pawn shop', pos: sites.debtors[1] },
+    { name: 'Tito', place: 'back alley', pos: sites.debtors[2] },
   ];
   return debtors.map((debtor, index) => ({
-    text: `Collect from ${debtor.name} — ${debtor.pos.x === sites.debtors[0].x ? 'bodega' : index === 1 ? 'pawn shop' : 'back alley'}`,
+    text: `Collect from ${debtor.name} — ${debtor.place}`,
     marker: () => at(debtor.pos, 66, 'kill'),
     enter: (ctx) => {
       ctx.mission.data[`thugs${index}`] = ctx.world.people.spawnGang(debtor.pos.x, debtor.pos.y, 2, {
@@ -230,10 +230,11 @@ export function createMissions(worldRef, startProgress = 0, storyDone = false) {
     pierDrop: { x: 5820, y: 6640 },
     pierCrew: { x: 5900, y: 6680 },
   };
-  // Bad Debt's steps need the sites, and its mission entry is shared in MISSIONS.
-  if (!MISSIONS[1].steps) MISSIONS[1].steps = buildDebtSteps(sites);
+  // Bad Debt's steps need this run's sites. Keep the exported MISSIONS pristine so a second
+  // mission system (or a screenshot scene) never inherits another city's debtors.
+  const definitions = MISSIONS.map((def) => (def.steps ? def : { ...def, steps: buildDebtSteps(sites) }));
 
-  let progress = clamp(startProgress, 0, MISSIONS.length);
+  let progress = clamp(startProgress, 0, definitions.length);
   let storyComplete = storyDone;
   let mission = null;
   let nearStart = false;
@@ -245,7 +246,7 @@ export function createMissions(worldRef, startProgress = 0, storyDone = false) {
     get missionIndex() { return mission ? mission.index : -1; },
     get stepIndex() { return mission ? mission.step : -1; },
     sites,
-    MISSIONS,
+    MISSIONS: definitions,
   };
 
   function ctx() {
@@ -253,8 +254,8 @@ export function createMissions(worldRef, startProgress = 0, storyDone = false) {
   }
 
   function startMission() {
-    if (mission || storyComplete || progress >= MISSIONS.length) return false;
-    const def = MISSIONS[progress];
+    if (mission || storyComplete || progress >= definitions.length) return false;
+    const def = definitions[progress];
     mission = { def, index: progress, step: -1, timer: def.time ?? 0, totalTime: def.time ?? 0, data: {}, waiting: true };
     worldRef.setObjective({ title: def.title, text: '', timer: mission.timer, total: mission.totalTime, index: progress });
     worldRef.showDialog(def.intro);
@@ -319,7 +320,7 @@ export function createMissions(worldRef, startProgress = 0, storyDone = false) {
     worldRef.showBanner('MISSION COMPLETE', `${def.title}   +$${reward}`, '#9fe870', 4.6);
     worldRef.notify(`+$${reward}`, '#9fe870', 3);
     worldRef.emit('missionComplete', { index, progress, title: def.title });
-    if (progress >= MISSIONS.length) {
+    if (progress >= definitions.length) {
       storyComplete = true;
       worldRef.state.storyComplete = true;
       worldRef.showBanner('THE END', 'Vice Harbor is yours. Keep the engine running.', '#ffcf5c', 9);
@@ -341,7 +342,7 @@ export function createMissions(worldRef, startProgress = 0, storyDone = false) {
 
     if (!mission) {
       if (nearStart) {
-        const def = MISSIONS[progress];
+        const def = definitions[progress];
         if (def) {
           worldRef.state.missionPrompt = `E  START MISSION — ${def.title}`;
           if (controls.enterPressed && !worldRef.player.inCar) {
@@ -351,8 +352,8 @@ export function createMissions(worldRef, startProgress = 0, storyDone = false) {
         }
       }
       const markers = [];
-      if (!storyComplete && MISSIONS[progress]) {
-        markers.push({ ...at(sites.garage, 54, 'mission'), label: `M${progress + 1}`, title: MISSIONS[progress].title });
+      if (!storyComplete && definitions[progress]) {
+        markers.push({ ...at(sites.garage, 54, 'mission'), label: `M${progress + 1}`, title: definitions[progress].title });
       }
       worldRef.setMarkers(markers);
       if (storyComplete) {

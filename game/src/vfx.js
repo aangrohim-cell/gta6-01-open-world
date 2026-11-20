@@ -13,3 +13,9 @@ export function fade(t, max) {
   if (max <= 0) return 0;
   return Math.max(0, Math.min(1, t / max));
 }
+
+/** A smooth 0→1→0 triangle wave; slower and softer than a sine for rotating highlights. */
+export function sweep(time, speed = 1, phase = 0) {
+  const step = (((time * speed + phase) / Math.PI) % 2 + 2) % 2;
+  return step <= 1 ? step : 2 - step;
+}

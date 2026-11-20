@@ -44,12 +44,14 @@ export const CAR = {
   drag: 0.92,
   maxSpeed: 545,
   maxReverse: 195,
-  turnRate: 2.65,
+  turnRate: 2.85,
   grip: 7.2,
   handbrakeGrip: 1.6,
   health: 240,
   explodeDamage: 95,
   explodeRadius: 150,
+  /** Impact speed above which a wall or kerb scratches the paint. */
+  impactDamageSpeed: 70,
 };
 
 export const WEAPONS = {
@@ -61,11 +63,14 @@ export const WEAPONS = {
 export const WANTED = {
   max: 5,
   /** Seconds without a crime, out of sight of police, before one star fades. */
-  coolDelay: 9,
-  coolPerStar: 7,
+  coolDelay: 8.5,
+  coolPerStar: 6.2,
   /** How far the nearest officer has to be for the player to count as unseen. */
-  unseenDistance: 520,
-  spawnInterval: 3.4,
+  unseenDistance: 540,
+  spawnInterval: 3.1,
+  /** An officer this close on foot starts a bust; the player has this long to break away. */
+  bustDistance: 62,
+  bustDelay: 1.7,
 };
 
 export const POLICE = {
@@ -73,7 +78,7 @@ export const POLICE = {
   carSpeed: 470,
   manHealth: 110,
   manSpeed: 135,
-  bulletDamage: 8,
+  bulletDamage: 7,
   fireCooldown: 0.85,
   range: 360,
   accuracy: 0.62,
@@ -91,11 +96,11 @@ export const GANG = {
 };
 
 export const TRAFFIC = {
-  cars: 78,
+  cars: 82,
   parked: 46,
   speedMin: 132,
   speedMax: 196,
-  pedCount: 186,
+  pedCount: 196,
   pedSpeed: 34,
 };
 
@@ -105,6 +110,8 @@ export const LOOT = {
   gangArmor: 0.16,
   gangHealth: 0.35,
   pedArmor: 0.02,
+  /** SMG-toting crews sometimes leave a magazine with their name on it. */
+  smgAmmo: 0.24,
 };
 
 export const PALETTE = {
@@ -142,6 +149,8 @@ export const CAR_COLORS = [
   { name: 'Pearl White', body: '#ece9e2', roof: '#c8c5be' },
   { name: 'Taxi Yellow', body: '#f2c23f', roof: '#c99b22', taxi: true },
   { name: 'Midnight', body: '#26242d', roof: '#17161d' },
+  { name: 'Coral Pink', body: '#e3919b', roof: '#b96c76' },
+  { name: 'Harbor Slate', body: '#6c7f8d', roof: '#4d5e6a' },
 ];
 
 /** The character's clothes, so the player reads clearly against the crowd. */

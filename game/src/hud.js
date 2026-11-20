@@ -185,6 +185,12 @@ function drawMinimap(ctx, world, x, y, size, time) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('N', x + 19, y + 18);
+  // Small edge letters make the fixed-north map readable at a glance.
+  ctx.fillStyle = 'rgba(246, 241, 230, 0.5)';
+  ctx.font = `700 8px ${FONT}`;
+  ctx.fillText('S', x + size - 12, y + size / 2);
+  ctx.fillText('W', x + size / 2, y + size - 12);
+  ctx.fillText('E', x + size / 2, y + 12);
 }
 
 /* ---------------------------------------------------------------- dialogs and prompts */
@@ -381,6 +387,13 @@ export function drawHUD(ctx, world, camera, options = {}) {
     }
   }
   ctx.restore();
+  if (heat > 0) {
+    const close = world.nearestOfficer < 620;
+    ctx.textAlign = 'right';
+    ctx.fillStyle = close ? '#ff7a6a' : MUTED;
+    ctx.font = `700 9px ${FONT}`;
+    ctx.fillText(close ? 'POLICE ON YOU' : 'POLICE SEARCHING', 1258, 16);
+  }
   ctx.textAlign = 'right';
   ctx.font = `700 26px ${FONT}`;
   ctx.fillStyle = '#9fe870';
@@ -422,6 +435,8 @@ export function drawHUD(ctx, world, camera, options = {}) {
     const width = 560;
     const x = (VIEW.width - width) / 2;
     panel(ctx, x, 18, width, objective.timer > 0 ? 82 : 66, 10, 0.72);
+    ctx.fillStyle = GOLD;
+    ctx.fillRect(x, 30, 3, objective.timer > 0 ? 58 : 44);
     ctx.textAlign = 'left';
     ctx.fillStyle = GOLD;
     ctx.font = `800 10px ${FONT}`;
@@ -506,6 +521,11 @@ export function drawHUD(ctx, world, camera, options = {}) {
     ctx.fillText(slot[1], x + 18, VIEW.height - 46);
   });
   if (player.inCar) {
+    const carName = (player.inCar.color?.name ?? player.inCar.model ?? 'car').toUpperCase();
+    ctx.textAlign = 'left';
+    ctx.fillStyle = GOLD;
+    ctx.font = `700 10px ${FONT}`;
+    ctx.fillText(carName, VIEW.width - 246, VIEW.height - 163);
     const speed = Math.round(Math.hypot(player.inCar.vx, player.inCar.vy) * 0.18);
     const speedRatio = clamp(speed / 140, 0, 1);
     ctx.textAlign = 'left';

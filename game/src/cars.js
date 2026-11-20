@@ -12,11 +12,12 @@ export const CAR_MODELS = {
   van: { w: 50, l: 100 },
   taxi: { w: 42, l: 84 },
   pickup: { w: 46, l: 90 },
+  coupe: { w: 41, l: 88 },
   cop: { w: 46, l: 92 },
 };
 
-const MODEL_NAMES = ['sedan', 'sports', 'van', 'taxi', 'pickup'];
-const RADIO = ['VICE FM 98.6', 'SUNSET 104.2', 'COAST LINE RADIO', 'WAVE 89.1'];
+const MODEL_NAMES = ['sedan', 'sports', 'van', 'taxi', 'pickup', 'coupe'];
+const RADIO = ['VICE FM 98.6', 'SUNSET 104.2', 'COAST LINE RADIO', 'WAVE 89.1', 'NEON 99.3'];
 
 export function createCars(world) {
   const { city, player, state, random } = world;
@@ -267,6 +268,9 @@ export function createCars(world) {
 
     const stepX = car.vx * dt;
     const stepY = car.vy * dt;
+    // Snapshot the closing speed: the collision response below reverses most of it, and using the
+    // post-bounce velocity made even a head-on crash count as a harmless scratch.
+    const impactSpeed = Math.hypot(car.vx, car.vy);
     const nx = car.x + stepX;
     const ny = car.y + stepY;
     let hit = false;
@@ -286,13 +290,10 @@ export function createCars(world) {
       car.vy *= -0.2;
       hit = true;
     }
-    if (hit) {
-      const impact = Math.hypot(car.vx, car.vy);
-      if (impact > 70) {
-        world.damageCar(car, impact * 0.03, false);
-        state.shake = Math.max(state.shake, Math.min(8, impact / 55));
-        world.audio.impact();
-      }
+    if (hit && impactSpeed > CAR.impactDamageSpeed) {
+      world.damageCar(car, impactSpeed * 0.026, false);
+      state.shake = Math.max(state.shake, Math.min(8, impactSpeed / 55));
+      world.audio.impact();
     }
 
     // Count the distance actually travelled, not the intended step into a wall.
@@ -511,18 +512,24 @@ export function createCars(world) {
   function enterCar(car) {
     if (car.kind === 'wreck') return;
     const wasOccupied = car.kind === 'traffic' || car.kind === 'cop';
+    const stolenCop = car.kind === 'cop';
     player.inCar = car;
     car.kind = 'player';
     car.parked = false;
+    car.siren = false;
     car.speed = Math.hypot(car.vx, car.vy);
     if (wasOccupied) {
       world.people.spawnFleeingDriver(car);
       world.people.scare(car.x, car.y, 230);
-      // The old check looked for a block type 'park', which this city never produces, so every
-      // carjack was reported at full heat. Base it on who saw it instead.
-      const witnessed = world.nearestOfficer < 620;
-      world.addWanted(witnessed ? 0.62 : 0.42, 'Grand theft auto');
-      world.audio.horn();
+      // Base the heat on who saw it; taking a cruiser is its own, much louder statement.
+      if (stolenCop) {
+        world.addWanted(1.4, 'Stealing a police cruiser');
+        world.audio.sirenBlip();
+      } else {
+        const witnessed = world.nearestOfficer < 620;
+        world.addWanted(witnessed ? 0.62 : 0.42, 'Grand theft auto');
+        world.audio.horn();
+      }
     }
     state.radio = pick(random, RADIO);
     state.radioTimer = 4.5;

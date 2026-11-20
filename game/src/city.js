@@ -15,6 +15,8 @@ const BEACH_PASTELS = ['#e8917f', '#e8dcc0', '#a8d5c1', '#c9b6dd', '#a9cfe0', '#
 const MIDTOWN_WARM = ['#d8b38a', '#c98f6b', '#e3c9a3', '#b98f7a', '#d9a17c', '#cdb08b'];
 const DOWNTOWN_GLASS = ['#7d8fa8', '#94a6b8', '#6d7f96', '#b0bfc8', '#8aa0ad', '#6f8497'];
 const LOWRISE = ['#c7b299', '#d6c3aa', '#bfa78f', '#e0cdb2', '#b9a893'];
+/** Rooftop ad cards: invented local businesses, never a real-world brand. */
+const BILLBOARDS = ['SUNSET SODA', 'HARBOR LINEN', 'PALM RADIO', 'CORAL MOTEL', 'CAFE OCHO', 'BAY BICYCLES'];
 const DISTRICT_NAMES = {
   beach: 'Vice Beach',
   downtown: 'Downtown',
@@ -53,6 +55,18 @@ function paletteFor(district) {
 /** The roof furniture every building gets a little of, deterministically. */
 function addRoofProps(random, props, building) {
   const { x, y, w, h, height } = building;
+  // A rooftop ad every so often: tall, flat roofs are the only place one reads from above.
+  if (w > 120 && h > 70 && height > 20 && random() < 0.28) {
+    props.push({
+      type: 'billboard',
+      x: x + w * (0.3 + random() * 0.4),
+      y: y + h * (0.3 + random() * 0.4),
+      angle: random() < 0.5 ? 0 : Math.PI / 2,
+      size: 1,
+      text: pick(random, BILLBOARDS),
+      tint: pick(random, ['#e8b45c', '#7fc6c2', '#dd7f8a', '#a9b7d8']),
+    });
+  }
   const count = Math.min(4, Math.floor(w * h / 14000) + (height > 40 ? 1 : 0));
   for (let index = 0; index < count; index += 1) {
     const px = x + 18 + random() * Math.max(4, w - 36);
@@ -233,7 +247,7 @@ export function createCity(seed) {
       });
       if (random() < 0.65) {
         building.sign = {
-          text: pick(random, ['CAFÉ SOL', 'LIQUOR', 'TATTOO', 'PAWN', 'DELI', 'SURF CO.', 'BODEGA', 'PIZZA', 'NAILS', 'MOTEL']),
+          text: pick(random, ['CAFÉ SOL', 'LIQUOR', 'TATTOO', 'PAWN', 'DELI', 'SURF CO.', 'BODEGA', 'PIZZA', 'NAILS', 'MOTEL', 'FISH MARKET', 'RECORDS', 'LAUNDRY', 'ARCADE']),
           color: '#fbeccd',
         };
       }

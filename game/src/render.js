@@ -6,7 +6,7 @@
 
 import { CAR_COLORS, CITY, PALETTE, PLAYER_LOOK, VIEW } from './config.js';
 import { clamp, shade, withAlpha } from './random.js';
-import { breathe, pulse } from './vfx.js';
+import { breathe, pulse, sweep } from './vfx.js';
 
 const HALF_W = VIEW.width / 2;
 const HALF_H = VIEW.height / 2;
@@ -410,7 +410,7 @@ export function createWorldRenderer(canvas) {
     }
   }
 
-  function drawProp(prop, view) {
+  function drawProp(prop, view, time) {
     if (prop.x < view.x0 - 40 || prop.x > view.x1 + 40 || prop.y < view.y0 - 50 || prop.y > view.y1 + 40) return;
     const { x, y } = prop;
     ctx.save();
@@ -648,6 +648,35 @@ export function createWorldRenderer(canvas) {
       ctx.fillRect(-8, -9, 6, 18);
       ctx.fillStyle = '#7c8795';
       ctx.fillRect(6, -6, 10, 12);
+    } else if (prop.type === 'billboard') {
+      // A rooftop ad reads as a small, tilted card from above, with poles and a moving glint.
+      ctx.fillStyle = 'rgba(28, 22, 34, 0.3)';
+      roundRect(ctx, -33, -14, 68, 28, 3);
+      ctx.fill();
+      ctx.fillStyle = prop.tint ?? '#e8b45c';
+      roundRect(ctx, -32, -13, 64, 24, 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(24, 20, 30, 0.78)';
+      ctx.fillRect(-30, -10, 60, 14);
+      ctx.fillStyle = '#fff2d4';
+      ctx.font = '800 8px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(prop.text ?? '').toUpperCase(), 0, -3);
+      ctx.fillStyle = '#5b564f';
+      ctx.fillRect(-22, 11, 4, 6);
+      ctx.fillRect(18, 11, 4, 6);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.12 + sweep(time, 1.5, prop.x * 0.01) * 0.3;
+      ctx.fillStyle = '#fff6dc';
+      ctx.beginPath();
+      ctx.moveTo(-30, -11);
+      ctx.lineTo(-14, -11);
+      ctx.lineTo(-30, 9);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
     } else if (prop.type === 'neon') {
       ctx.fillStyle = 'rgba(255, 207, 92, 0.25)';
       ctx.beginPath();
@@ -704,6 +733,25 @@ export function createWorldRenderer(canvas) {
     for (const offset of [-l * 0.28, l * 0.28]) {
       ctx.fillRect(offset - 5, -w / 2 - 1, 10, 4);
       ctx.fillRect(offset - 5, w / 2 - 3, 10, 4);
+    }
+    if (!wreck) {
+      // Low, warm beams wash the road ahead; the tiny sweep keeps a line of cars from looking flat.
+      const reach = l * 1.25;
+      const cone = ctx.createLinearGradient(l / 2, 0, l / 2 + reach, 0);
+      cone.addColorStop(0, 'rgba(255, 235, 180, 0.16)');
+      cone.addColorStop(1, 'rgba(255, 220, 150, 0)');
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.6 + sweep(time, 2.2, car.x * 0.02) * 0.4;
+      ctx.fillStyle = cone;
+      ctx.beginPath();
+      ctx.moveTo(l / 2 - 2, -w * 0.28);
+      ctx.lineTo(l / 2 + reach, -w * 1.15);
+      ctx.lineTo(l / 2 + reach, w * 1.15);
+      ctx.lineTo(l / 2 - 2, w * 0.28);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
     }
     const body = wreck ? '#3b3634' : car.color.body;
     const roof = wreck ? '#2c2827' : car.color.roof;
@@ -978,14 +1026,20 @@ export function createWorldRenderer(canvas) {
       ctx.textAlign = 'center';
       ctx.fillText('$', 0, 3);
     } else if (item.type === 'ammo') {
-      ctx.fillStyle = 'rgba(180, 140, 40, 0.35)';
+      const smg = item.weapon === 'smg';
+      ctx.fillStyle = smg ? 'rgba(120, 150, 210, 0.35)' : 'rgba(180, 140, 40, 0.35)';
       ctx.beginPath();
       ctx.arc(0, 0, 13, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#c9a545';
+      ctx.fillStyle = smg ? '#7f9dc9' : '#c9a545';
       ctx.fillRect(-8, -5, 16, 10);
-      ctx.fillStyle = '#3a3020';
-      for (let index = -5; index <= 5; index += 5) ctx.fillRect(index, -3, 2, 6);
+      ctx.fillStyle = '#2a2a30';
+      if (smg) {
+        ctx.fillRect(-6, -3, 9, 6);
+        ctx.fillRect(3, -2, 4, 4);
+      } else {
+        for (let index = -5; index <= 5; index += 5) ctx.fillRect(index, -3, 2, 6);
+      }
     } else if (item.type === 'health') {
       ctx.fillStyle = 'rgba(200, 70, 70, 0.3)';
       ctx.beginPath();
@@ -1174,7 +1228,7 @@ export function createWorldRenderer(canvas) {
     // Building shadows first, then bodies: a long shadow can cross the next street.
     for (const building of world.city.buildings) drawBuildingShadow(building, view);
     for (const building of world.city.buildings) drawBuilding(building, view, time);
-    for (const prop of world.city.props) drawProp(prop, view);
+    for (const prop of world.city.props) drawProp(prop, view, time);
     drawDecals(view);
     drawTapes(view, time);
 

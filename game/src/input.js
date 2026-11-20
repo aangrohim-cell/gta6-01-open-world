@@ -6,7 +6,7 @@
 import { VIEW } from './config.js';
 
 const GAME_KEYS = new Set([
-  'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyE', 'KeyF', 'KeyM', 'KeyR', 'KeyP', 'KeyQ',
+  'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyE', 'KeyF', 'KeyM', 'KeyR', 'KeyP', 'KeyQ', 'KeyH',
   'ShiftLeft', 'ShiftRight', 'Space', 'Enter', 'Escape', 'Tab', 'F5',
   'Digit1', 'Digit2', 'Digit3', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
 ]);
@@ -68,6 +68,9 @@ export function createInput(canvas) {
   window.addEventListener('pointerup', (event) => {
     if (event.button === 0) mouse.down = false;
   });
+  // A pointer cancelled by the browser (gesture, tab switch) never sends pointerup, which used to
+  // leave the trigger held down and empty the magazine on the next frame.
+  window.addEventListener('pointercancel', () => { mouse.down = false; mouse.pressed = false; });
   canvas.addEventListener('contextmenu', (event) => event.preventDefault());
   canvas.addEventListener('wheel', (event) => {
     mouse.wheel += Math.sign(event.deltaY);
@@ -78,6 +81,7 @@ export function createInput(canvas) {
     down(code) { return down.has(code); },
     pressed(code) { return pressed.has(code); },
     anyPressed(codes) { return codes.some((code) => pressed.has(code)); },
+    anyDown(codes) { return codes.some((code) => down.has(code)); },
     /** True for a short moment after the window regains focus; used to ignore stale clicks. */
     recentlyBlurred() { return performance.now() - lastBlur < 160; },
     mouse,

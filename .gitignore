@@ -1,5 +1,11 @@
+# Hand-in output and local tooling
 out/
 node_modules/
-.DS_Store
+.npx/
 *.log
 *.tmp
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+*.swp

@@ -28,6 +28,7 @@ export function readSave() {
       : [];
     return {
       version: SAVE_VERSION,
+      citySeed: Number.isSafeInteger(data.citySeed) ? data.citySeed : null,
       progress: Math.max(0, Math.min(6, Math.floor(data.progress))),
       storyComplete: Boolean(data.storyComplete) || Number(data.progress) >= 6,
       money: Math.max(0, Math.round(finite(data.money, 750))),
@@ -69,6 +70,7 @@ function readSaveFromObject(data) {
   const progress = Math.max(0, Math.min(6, Math.floor(finite(data.progress, 0))));
   return {
     version: SAVE_VERSION,
+    citySeed: Number.isSafeInteger(data.citySeed) ? data.citySeed : null,
     progress,
     storyComplete: Boolean(data.storyComplete) || progress >= 6,
     money: Math.max(0, Math.round(finite(data.money, 750))),

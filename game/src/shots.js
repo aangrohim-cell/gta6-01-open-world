@@ -64,8 +64,8 @@ function ped(world, x, y, angle, kind = 'ped') {
   return person;
 }
 
-function pickup(world, type, x, y, value) {
-  world.addPickup(type, x, y, value, { bob: 1.4 });
+function pickup(world, type, x, y, value, extra = {}) {
+  world.addPickup(type, x, y, value, { bob: 1.4, ...extra });
 }
 
 /* ------------------------------------------------------------------ title */
@@ -99,6 +99,9 @@ function streetShot(seed) {
   player.walkPhase = 2.4;
   player.invulnerable = 0;
   world.state.time = 18;
+  world.setHeat(1);
+  world.state.wantedFlash = 0;
+  world.state.shotsFired = 4;
 
   const torero = world.missionCar;
   torero.x = 5600;
@@ -126,6 +129,11 @@ function streetShot(seed) {
   ped(world, 5976, 6614, 2.6, 'beach');
   ped(world, 5080, 6608, -1.1, 'beach');
   ped(world, 5712, 6856, 0.9, 'beach');
+  ped(world, 5232, 6464, 2.4, 'beach');
+  ped(world, 5456, 6808, -2.1, 'beach');
+  ped(world, 5904, 6484, 1.4, 'beach');
+  ped(world, 6028, 6788, -0.8, 'beach');
+  traffic(world, 5320, 6396, Math.PI, 'coupe');
   pickup(world, 'cash', 5468, 6488, 120);
   pickup(world, 'armor', 5628, 6404, 35);
 
@@ -170,6 +178,9 @@ function coverShot(seed) {
   player.armor = 42;
   player.money = 3420;
   world.state.time = 52;
+  world.state.shotsFired = 38;
+  world.state.kills = 4;
+  world.state.distanceDriven = 1840;
   world.setHeat(3);
   world.state.wantedFlash = 0;
 
@@ -196,6 +207,10 @@ function coverShot(seed) {
   traffic(world, 3120, 4104, 0, 'pickup');
   traffic(world, 2760, 4104, Math.PI, 'sedan');
   traffic(world, 3620, 4028, 0, 'van');
+  traffic(world, 3378, 3880, Math.PI, 'coupe');
+  traffic(world, 3088, 3880, 0, 'sedan');
+  traffic(world, 3696, 3880, Math.PI, 'pickup');
+  traffic(world, 3724, 4104, 0, 'taxi');
   policeCar(world, 2690, 4104, 0.5);
 
   // Dropped loot from the pursuit, close enough to read but out of the collector's reach.
@@ -230,6 +245,12 @@ function coverShot(seed) {
   ped(world, 3062, 4106, -1.4, 'beach');
   ped(world, 3528, 4102, 0.8);
   ped(world, 3660, 3900, -2.4);
+  ped(world, 2796, 3892, 1.6);
+  ped(world, 3018, 3898, -2.6);
+  ped(world, 3244, 3894, 0.6);
+  ped(world, 3564, 3896, -1.2);
+  ped(world, 3788, 4106, 2.8);
+  ped(world, 2608, 3888, -0.5);
 
   world.setObjective({
     title: 'SUNSET SCORE',
@@ -305,6 +326,15 @@ function missionShot(seed) {
   getaway.kind = 'parked';
   getaway.color = { name: 'Midnight', body: '#242334', roof: '#15141f' };
 
+  // A cruiser and two officers cordon the street behind the firefight.
+  policeCar(world, 6224, 6400, -2.4);
+  const backupA = world.people.spawnCop(6136, 6444);
+  backupA.angle = -2.2;
+  backupA.state = 'idle';
+  const backupB = world.people.spawnCop(6312, 6432);
+  backupB.angle = -2.6;
+  backupB.state = 'idle';
+
   // Smoke, muzzle flashes and tracer fire across the beach.
   for (let index = 0; index < 5; index += 1) world.combat.smoke(5760 + index * 26, 6570 + (index % 2) * 34);
   world.combat.flash(player.x + 24, player.y - 24, -0.1, 18);
@@ -336,9 +366,14 @@ function missionShot(seed) {
   ped(world, 6088, 6604, 2.8, 'beach');
   ped(world, 5992, 6766, 2.2, 'beach');
   ped(world, 5688, 6802, -1.1, 'beach');
+  ped(world, 5368, 6504, 1.2, 'beach');
+  ped(world, 6176, 6588, -2.2, 'beach');
+  ped(world, 6248, 6724, 2.6, 'beach');
   pickup(world, 'armor', 5612, 6698, 30);
   pickup(world, 'health', 5928, 6694, 40);
   pickup(world, 'ammo', 5536, 6602, 36);
+  pickup(world, 'ammo', 5688, 6708, 24, { weapon: 'smg' });
+  pickup(world, 'cash', 6024, 6568, 220);
 
   return {
     world,

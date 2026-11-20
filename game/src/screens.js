@@ -1,7 +1,7 @@
 // The screens around the game: the sunset title card with its save-aware menu, the pause sheet,
 // and the WASTED and BUSTED overlays. These are the game's own painted art, no images loaded.
 
-import { FONT, FONT_MONO, VIEW } from './config.js';
+import { FONT, FONT_MONO, FONT_TITLE, VIEW } from './config.js';
 
 export const TITLE_MENU = {
   continue: { x: 86, y: 452, w: 372, h: 56 },
@@ -244,7 +244,7 @@ export function drawTitle(ctx, options) {
   titleGradient.addColorStop(0, '#fff4d6');
   titleGradient.addColorStop(0.45, '#ffcf5c');
   titleGradient.addColorStop(1, '#ff6a4d');
-  ctx.font = '900 182px Impact, "Arial Black", sans-serif';
+  ctx.font = `900 182px ${FONT_TITLE}`;
   ctx.fillStyle = 'rgba(20, 10, 26, 0.55)';
   ctx.fillText('VICE', 8, 276);
   ctx.fillStyle = titleGradient;
@@ -252,7 +252,7 @@ export function drawTitle(ctx, options) {
   ctx.strokeStyle = 'rgba(40, 18, 30, 0.8)';
   ctx.lineWidth = 2;
   ctx.strokeText('VICE', 0, 268);
-  ctx.font = '900 138px Impact, "Arial Black", sans-serif';
+  ctx.font = `900 138px ${FONT_TITLE}`;
   ctx.fillStyle = 'rgba(20, 10, 26, 0.55)';
   ctx.fillText('HARBOR', 6, 390);
   ctx.fillStyle = '#f6e9d2';
@@ -272,15 +272,15 @@ export function drawTitle(ctx, options) {
   const canContinue = Boolean(save);
   const continueSelected = selected === 0;
   drawMenuOption(ctx, TITLE_MENU.continue, '↵', 'CONTINUE', canContinue
-    ? `Job ${Math.min(save.progress + 1, 6)} of 6  ·  $${Math.round(save.money).toLocaleString('en-US')}  ·  ${save.tapes ?? 0}/8 mixtapes`
+    ? `Job ${Math.min(save.progress + 1, 6)} of 6  ·  $${Math.round(save.money).toLocaleString('en-US')}  ·  ${Array.isArray(save.tapes) ? save.tapes.length : 0}/8 mixtapes`
     : 'No save in this browser yet', continueSelected || hover === 'continue', !canContinue);
   drawMenuOption(ctx, TITLE_MENU.newGame, '↵', 'NEW GAME', 'Start from Dex\'s garage with $750 and a pistol', selected === 1 || hover === 'newGame', false);
 
   // Controls card.
   const cardX = 790;
-  const cardY = 470;
+  const cardY = 454;
   const cardW = 410;
-  const cardH = 212;
+  const cardH = 232;
   ctx.fillStyle = 'rgba(13, 11, 20, 0.72)';
   ctx.beginPath();
   ctx.roundRect(cardX, cardY, cardW, cardH, 10);
@@ -297,6 +297,7 @@ export function drawTitle(ctx, options) {
     ['E', 'steal a car · interact'],
     ['SHIFT / SPACE', 'sprint / handbrake'],
     ['1 2 3 · R', 'weapons · reload'],
+    ['H', 'sound the horn in a car'],
     ['P · M', 'pause · mute'],
     ['F5', 'save progress instantly'],
   ];
@@ -311,7 +312,7 @@ export function drawTitle(ctx, options) {
   });
   ctx.fillStyle = 'rgba(246, 241, 230, 0.35)';
   ctx.font = `500 9px ${FONT}`;
-  ctx.fillText('VICE HARBOR  ·  an open-world crime game  ·  built for make.fun', cardX, cardY + cardH + 24);
+  ctx.fillText('VICE HARBOR  ·  an open-world crime game  ·  built for make.fun', cardX, cardY + cardH + 14);
 
   // A soft vignette over the whole card.
   const vignette = ctx.createRadialGradient(VIEW.width / 2, VIEW.height / 2, 260, VIEW.width / 2, VIEW.height / 2, 820);
@@ -335,7 +336,7 @@ export function drawPause(ctx, world, missionSystem, saveInfo) {
   ctx.font = `800 11px ${FONT}`;
   ctx.fillText('VICE HARBOR', 80, 92);
   ctx.fillStyle = CREAM;
-  ctx.font = '900 82px Impact, "Arial Black", sans-serif';
+  ctx.font = `900 82px ${FONT_TITLE}`;
   ctx.fillText('PAUSED', 76, 172);
   ctx.fillStyle = 'rgba(246, 241, 230, 0.6)';
   ctx.font = `500 13px ${FONT}`;
@@ -367,9 +368,10 @@ export function drawPause(ctx, world, missionSystem, saveInfo) {
 
   const stats = [
     ['BANK', `$${Math.round(world.player.money).toLocaleString('en-US')}`],
-    ['MIXTAPES', `${world.state.tapes} / 8`],
+    ['MIXTAPES FOUND', `${world.state.tapes} / 8`],
     ['JOBS DONE', `${missionSystem?.progress ?? 0} / 6`],
     ['PEOPLE DOWN', String(world.state.kills)],
+    ['SHOTS FIRED', String(world.state.shotsFired)],
     ['MILES DRIVEN', (world.state.distanceDriven / 400).toFixed(1)],
   ];
   stats.forEach((row, index) => {
@@ -408,12 +410,13 @@ export function drawPause(ctx, world, missionSystem, saveInfo) {
     ['SPACE', 'handbrake in a car'],
     ['1 / 2 / 3', 'fists / pistol / SMG'],
     ['R', 'reload'],
+    ['H', 'sound the horn while driving'],
     ['P / ESC', 'pause'],
     ['M', 'mute sound'],
     ['F5', 'save progress right now'],
   ];
   rows.forEach((row, index) => {
-    const y = boxY + 58 + index * 25;
+    const y = boxY + 56 + index * 23;
     ctx.fillStyle = 'rgba(255, 238, 208, 0.85)';
     ctx.font = `700 10px ${FONT_MONO}`;
     ctx.fillText(row[0], rx + 24, y);
@@ -443,7 +446,7 @@ export function drawWasted(ctx, world) {
   ctx.translate(VIEW.width / 2, VIEW.height / 2 - 20);
   ctx.transform(1, 0, -0.08, 1, 0, 0);
   ctx.fillStyle = 'rgba(20, 4, 6, 0.7)';
-  ctx.font = '900 136px Impact, "Arial Black", sans-serif';
+  ctx.font = `900 136px ${FONT_TITLE}`;
   ctx.fillText('WASTED', 8, 12);
   ctx.fillStyle = '#d33a38';
   ctx.fillText('WASTED', 0, 0);
@@ -473,7 +476,7 @@ export function drawBusted(ctx, world) {
   ctx.translate(VIEW.width / 2, VIEW.height / 2 - 20);
   ctx.transform(1, 0, -0.08, 1, 0, 0);
   ctx.fillStyle = 'rgba(4, 8, 26, 0.7)';
-  ctx.font = '900 136px Impact, "Arial Black", sans-serif';
+  ctx.font = `900 136px ${FONT_TITLE}`;
   ctx.fillText('BUSTED', 8, 12);
   ctx.fillStyle = '#5f8cff';
   ctx.fillText('BUSTED', 0, 0);

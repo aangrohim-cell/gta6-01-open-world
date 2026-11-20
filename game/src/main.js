@@ -22,6 +22,7 @@ const params = new URLSearchParams(window.location.search);
 const shotName = params.get('shot');
 const seedParam = Number.parseInt(params.get('seed') ?? '', 10);
 const SEED = Number.isInteger(seedParam) ? seedParam : 20260417;
+let activeSeed = SEED;
 
 const canvas = document.getElementById('game');
 const status = document.getElementById('status');
@@ -29,7 +30,7 @@ const renderer = createWorldRenderer(canvas);
 const ctx = renderer.ctx;
 const input = createInput(canvas);
 const audio = createAudio();
-const city = createCity(SEED);
+let city = createCity(activeSeed);
 
 let world = null;
 let missions = null;
@@ -58,6 +59,12 @@ function fitCanvas() {
 window.addEventListener('resize', fitCanvas);
 fitCanvas();
 
+function ensureCity(seed) {
+  if (!Number.isSafeInteger(seed) || seed === activeSeed) return;
+  activeSeed = seed;
+  city = createCity(activeSeed);
+}
+
 // Browsers can suspend a tab without warning; bank progress before that happens.
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && screen === 'playing') saveNow(true);
@@ -74,7 +81,7 @@ function snapshot(forcePosition = false) {
   const atGarage = missions && missions.active;
   return {
     version: 1,
-    citySeed: SEED,
+    citySeed: activeSeed,
     progress: missions ? missions.progress : 0,
     storyComplete: missions ? missions.storyComplete : false,
     money: Math.round(player.money),
@@ -144,8 +151,9 @@ function attachEvents() {
 }
 
 function newGame() {
+  ensureCity(SEED);
   city.tapes.forEach((tape) => { tape.taken = false; });
-  world = createWorld(city, audio, SEED + Math.floor(Math.random() * 10000));
+  world = createWorld(city, audio, activeSeed + Math.floor(Math.random() * 10000));
   missions = createMissions(world, 0, false);
   attachEvents();
   world.player.money = 750;
@@ -170,8 +178,9 @@ function newGame() {
 function continueGame() {
   const data = saveCache ?? readSave();
   if (!data) { newGame(); return; }
+  if (Number.isSafeInteger(data.citySeed)) ensureCity(data.citySeed);
   city.tapes.forEach((tape) => { tape.taken = false; });
-  world = createWorld(city, audio, SEED + (data.progress ?? 0) * 37 + 11);
+  world = createWorld(city, audio, activeSeed + (data.progress ?? 0) * 37 + 11);
   missions = createMissions(world, data.progress ?? 0, Boolean(data.storyComplete));
   attachEvents();
   applySave(data);
@@ -321,7 +330,7 @@ function frame(now) {
     world.update(raw, {
       moveX: 0, moveY: 0, aimX: 0, aimY: 0, run: false,
       throttle: 0, brake: 0, steer: 0, handbrake: false,
-      fire: false, enterPressed: false, reloadPressed: false, weaponSlot: null,
+      fire: false, enterPressed: false, hornPressed: false, reloadPressed: false, weaponSlot: null,
     });
     updateCamera(raw);
     renderer.drawWorld(world, camera, clock);
@@ -335,7 +344,7 @@ function frame(now) {
     world.update(raw, {
       moveX: 0, moveY: 0, aimX: 0, aimY: 0, run: false,
       throttle: 0, brake: 0, steer: 0, handbrake: false,
-      fire: false, enterPressed: false, reloadPressed: false, weaponSlot: null,
+      fire: false, enterPressed: false, hornPressed: false, reloadPressed: false, weaponSlot: null,
     });
     updateCamera(raw);
     renderer.drawWorld(world, camera, clock);
@@ -369,6 +378,7 @@ function frame(now) {
     handbrake: input.down('Space'),
     fire: input.mouse.down || input.mouse.pressed,
     enterPressed: input.pressed('KeyE'),
+    hornPressed: input.pressed('KeyH'),
     reloadPressed: input.pressed('KeyR'),
     weaponSlot: input.pressed('Digit1') ? 'fists' : input.pressed('Digit2') ? 'pistol' : input.pressed('Digit3') ? 'smg' : null,
   };
@@ -378,6 +388,7 @@ function frame(now) {
     if (advance) world.advanceDialog();
     controls.fire = false;
     controls.enterPressed = false;
+    controls.hornPressed = false;
     controls.reloadPressed = false;
     controls.weaponSlot = null;
   }
@@ -404,6 +415,7 @@ function frame(now) {
     missions.update(STEP, controls);
     world.update(STEP, controls);
     controls.enterPressed = false;
+    controls.hornPressed = false;
     controls.reloadPressed = false;
     controls.weaponSlot = null;
     accumulator -= STEP;

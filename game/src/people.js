@@ -4,9 +4,9 @@
 // shooting and asks this module who was hit.
 
 import { CITY, GANG, LOOT, POLICE, TRAFFIC } from './config.js';
-import { angleDelta, chance, clamp, distance, intRange, lerp, pick, range } from './random.js';
+import { chance, clamp, distance, intRange, pick, range } from './random.js';
 
-const SHIRTS = ['#e8dfc6', '#d76a5b', '#5c8fa8', '#e8b84a', '#7d6a9a', '#6f9c6f', '#c7779b', '#e0e4e8', '#3f4a5c', '#b5794e'];
+const SHIRTS = ['#e8dfc6', '#d76a5b', '#5c8fa8', '#e8b84a', '#7d6a9a', '#6f9c6f', '#c7779b', '#e0e4e8', '#3f4a5c', '#b5794e', '#d9a05b', '#6f8fa0', '#bd8eae'];
 const PANTS = ['#3a4254', '#5a4a3a', '#2c3038', '#6b6357', '#46505f', '#7a5d46'];
 const SKINS = ['#c98d63', '#a86f4b', '#e0b089', '#8a5a3c', '#d49a72', '#6f4a33'];
 const HAIRS = ['#241a17', '#3b2a1e', '#5c3c22', '#171317', '#7a6144', '#b08a5a'];
@@ -387,6 +387,9 @@ export function createPeople(world) {
         world.addPickup('armor', man.x + random() * 12 - 6, man.y + random() * 12 - 6, man.boss ? 60 : 30);
       }
     }
+    if (man.gun === 'smg' && chance(random, LOOT.smgAmmo)) {
+      world.addPickup('ammo', man.x + range(random, -12, 12), man.y + range(random, -12, 12), 30, { weapon: 'smg' });
+    }
     world.audio.hit();
     world.emit('manKilled', { man, source });
   }
@@ -462,25 +465,22 @@ export function createPeople(world) {
   }
 
   function update(dt, controls, frozen) {
-    for (const ped of peds.list) {
+    // Iterate backwards: bodies and distant cops are removed inside the loop, and a forward
+    // for...of would skip the entity after every removal.
+    for (let index = peds.list.length - 1; index >= 0; index -= 1) {
+      const ped = peds.list[index];
       if (distance(ped.x, ped.y, player.x, player.y) < 1700 || ped.dead) updatePed(ped, dt);
-      if (ped.dead && ped.deathTimer > 26) {
-        const index = peds.list.indexOf(ped);
-        if (index >= 0) peds.list.splice(index, 1);
-      }
+      if (ped.dead && ped.deathTimer > 26) peds.list.splice(index, 1);
     }
-    for (const man of men.list) {
+    for (let index = men.list.length - 1; index >= 0; index -= 1) {
+      const man = men.list[index];
       if (man.dead) {
         man.deathTimer += dt;
-        if (man.deathTimer > 28) {
-          const index = men.list.indexOf(man);
-          if (index >= 0) men.list.splice(index, 1);
-        }
+        if (man.deathTimer > 28) men.list.splice(index, 1);
         continue;
       }
       if (distance(man.x, man.y, player.x, player.y) > 1800 && man.faction === 'cop') {
-        const index = men.list.indexOf(man);
-        if (index >= 0) men.list.splice(index, 1);
+        men.list.splice(index, 1);
         continue;
       }
       if (!frozen) updateMan(man, dt);

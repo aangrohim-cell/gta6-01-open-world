@@ -4,7 +4,7 @@
 // so every system reports damage through one place.
 
 import { WEAPONS } from './config.js';
-import { clamp, distance } from './random.js';
+import { angleDelta, distance } from './random.js';
 
 const DECAL_CAP = 180;
 
@@ -126,7 +126,9 @@ export function createCombat(world) {
     for (const ped of world.peds.list) {
       if (ped.dead) continue;
       const d = distance(player.x, player.y, ped.x, ped.y);
-      if (d < weapon.range && Math.abs(Math.atan2(ped.y - player.y, ped.x - player.x) - angle) < 1.1 && d < bestDistance) {
+      // angleDelta wraps at +/-PI; a raw subtraction missed anyone just across that seam.
+      const bearing = Math.abs(angleDelta(angle, Math.atan2(ped.y - player.y, ped.x - player.x)));
+      if (d < weapon.range && bearing < 1.1 && d < bestDistance) {
         bestDistance = d;
         hit = { type: 'ped', entity: ped };
       }
@@ -134,7 +136,8 @@ export function createCombat(world) {
     for (const man of world.men.list) {
       if (man.dead) continue;
       const d = distance(player.x, player.y, man.x, man.y);
-      if (d < weapon.range && Math.abs(Math.atan2(man.y - player.y, man.x - player.x) - angle) < 1.1 && d < bestDistance) {
+      const bearing = Math.abs(angleDelta(angle, Math.atan2(man.y - player.y, man.x - player.x)));
+      if (d < weapon.range && bearing < 1.1 && d < bestDistance) {
         bestDistance = d;
         hit = { type: 'man', entity: man };
       }

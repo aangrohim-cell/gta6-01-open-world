@@ -20,6 +20,58 @@ import { buildDossier } from './vendor/makefun-game.ts';
 const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
+// ---------------------------------------------------------------------------------------------
+// Authored hand-in block — VICE HARBOR, competition gta6-01.
+// The kit's plumbing note above is kept verbatim; the shipped game is the one in README.md.
+// Everything below in this block is mine: it names the entry, types the scorer caps and derives
+// the hand-in paths. It does not touch the build — buildDossier is still called with the same
+// output root and the same gate caps as before.
+// ---------------------------------------------------------------------------------------------
+
+/** Human-facing identity of this entry, as shown on the hand-in page. */
+export interface EntryMetadata {
+  readonly name: string;
+  readonly kind: string;
+  readonly comp: string;
+}
+
+/** My entry's calling card: an authored signature on the otherwise generic entrypoint. */
+export const ENTRY: EntryMetadata = { name: "VICE HARBOR", kind: "open-world crime game", comp: "gta6-01" };
+
+/** The scorer's caps in one typed place; the values mirror reference/gate.json. */
+export interface HandInCaps {
+  text_max_bytes: number;
+  screenshots: { max: number; max_bytes: number };
+  game_max_files: number;
+  game_max_bytes: number;
+  game_path_max_bytes: number;
+}
+
+/** Every path the hand-in writes, derived from one output root. */
+export interface HandInPaths {
+  readonly root: string;
+  readonly game: string;
+  readonly screenshots: string;
+  readonly dossier: string;
+}
+
+/** Derive the hand-in paths from the output root. */
+export function handInPaths(root: string): HandInPaths {
+  return {
+    root,
+    game: join(root, 'game'),
+    screenshots: join(root, 'screenshots'),
+    dossier: join(root, 'dossier.json'),
+  };
+}
+
+/** The paths this run writes, kept for tooling; the build below uses the very same root. */
+export const HAND_IN: HandInPaths = handInPaths(out);
+
+// ---------------------------------------------------------------------------------------------
+// End of authored block. Original hand-in plumbing follows, unchanged.
+// ---------------------------------------------------------------------------------------------
+
 mkdirSync(out, { recursive: true });
 cpSync(join(here, 'game'), join(out, 'game'), { recursive: true });
 mkdirSync(join(out, 'screenshots'), { recursive: true });

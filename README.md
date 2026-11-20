@@ -1,3 +1,9 @@
+[![make.fun · gta6-01](https://make.fun/badge/gta6-01.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
+[![rank](https://make.fun/badge/gta6-01/aangrohim-cell/gta6-01-open-world/rank.svg)](https://make.fun/bounty/gta6-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
+[![reward](https://make.fun/badge/gta6-01/aangrohim-cell/gta6-01-open-world/reward.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
+
+On make.fun: [make.fun bounty gta6-01](https://make.fun/bounty/gta6-01)
+
 # VICE HARBOR — The Sunset City
 
 An original, top-down open-world crime game built for the `make.fun` bounty **gta6-01**.
